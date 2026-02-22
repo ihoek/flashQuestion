@@ -2,9 +2,13 @@ import {
   Engine,
   Scene,
   Vector3,
+  Color3,
   HemisphericLight,
+  DirectionalLight,
   FreeCamera,
-  DefaultRenderingPipeline, // 후처리를 위해 추가
+  ShadowGenerator,
+  DefaultRenderingPipeline,
+  MeshBuilder,
 } from "@babylonjs/core";
 import "@babylonjs/loaders/glTF";
 
@@ -45,25 +49,63 @@ export class SceneController {
     camera.speed = 0.2;
     // 마우스 회전 감도 조절
     camera.angularSensibility = 2000;
+    // 좌클릭(button 0)만 회전에 사용, 우클릭은 회전에서 제외
+    camera.inputs.attached.mouse.buttons = [0];
 
     // [추가] 카메라 충돌 및 물리 설정
     camera.checkCollisions = true;
-    camera.applyGravity = true; // 바닥에 붙어있게 함
-    camera.ellipsoid = new Vector3(0.5, 1, 0.5); // 카메라의 히트박스(사람 크기)
+    camera.applyGravity = true;
+    camera.ellipsoid = new Vector3(0.5, 1, 0.5);
 
-    // 2. 기본 조명
+    // 우클릭 드래그로 카메라 상하 이동
+    this.initRightClickVerticalMove(camera);
+
+    // 2. 환경광 (어두운 곳이 없게 전체적으로 비춤)
     const light = new HemisphericLight(
       "light",
       new Vector3(0, 1, 0),
       this.scene,
     );
-    light.intensity = 0.7; // 조명 밝기 조절
+    light.intensity = 0.7;
 
-    // 3. [추가] 방 생성
-    // Room 클래스가 호출되면서 내부의 바닥과 벽이 생성됩니다.
+    // 3. 방향광 (그림자를 만들어 입체감을 줌)
+    const dirLight = new DirectionalLight(
+      "dirLight",
+      new Vector3(-1, -1, -1),
+      this.scene,
+    );
+    dirLight.position = new Vector3(10, 20, 10);
+    dirLight.intensity = 1.5;
+
+    // 4. 씬 배경색
+    // this.scene.clearColor = Color3.FromHexString("#FFFFFF").toColor4();
+
+    // [추가] 조명이 너무 노랗거나 파랗다면 이미지 처리 장치에서 밝기 노출을 조정합니다.
+    // this.scene.imageProcessingConfiguration.exposure = 1.0;
+
+    // 5. 그림자 생성
+    const shadowGenerator = new ShadowGenerator(1024, dirLight);
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.blurKernel = 32;
+
+    // 6. 보이지 않는 바닥 (카메라 충돌/중력용)
+    const invisibleGround = MeshBuilder.CreateGround(
+      "invisibleGround",
+      { width: 100, height: 100 },
+      this.scene,
+    );
+    invisibleGround.isVisible = false;
+    invisibleGround.checkCollisions = true;
+
+    // 7. 방 생성
     this.room = new Room(this.scene);
 
-    // 4. [추가] Sketchfab 느낌을 위한 후처리(Post-process) 설정
+    // 7. Room 메쉬들을 그림자 caster로 등록
+    this.room.scene.meshes.forEach((mesh) => {
+      shadowGenerator.addShadowCaster(mesh);
+    });
+
+    // 8. 후처리(Post-process) 설정
     this.initPostProcess(camera);
 
     // 5. 윈도우 리사이즈 대응
@@ -87,6 +129,36 @@ export class SceneController {
     pipeline.bloomWeight = 0.3;
     pipeline.imageProcessingEnabled = true;
     pipeline.imageProcessing.contrast = 1.2; // 색감 대비 향상
+  }
+
+  initRightClickVerticalMove(camera) {
+    let isRightDown = false;
+    let lastY = 0;
+    const sensitivity = 0.01;
+
+    this.canvas.addEventListener("pointerdown", (e) => {
+      if (e.button === 2) {
+        isRightDown = true;
+        lastY = e.clientY;
+      }
+    });
+
+    this.canvas.addEventListener("pointermove", (e) => {
+      if (!isRightDown) return;
+      const deltaY = e.clientY - lastY;
+      camera.position.y -= deltaY * sensitivity;
+      lastY = e.clientY;
+    });
+
+    this.canvas.addEventListener("pointerup", (e) => {
+      if (e.button === 2) {
+        isRightDown = false;
+      }
+    });
+
+    this.canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
   }
 
   startRenderLoop() {

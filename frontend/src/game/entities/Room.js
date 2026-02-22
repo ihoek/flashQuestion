@@ -1,5 +1,9 @@
-// src/game/entities/Room.js
-import { MeshBuilder, StandardMaterial, Color3 } from "@babylonjs/core";
+import { LoadAssetContainerAsync, Vector3 } from "@babylonjs/core";
+import wallModelUrl from "../../assets/models/glb/wall.glb?url";
+import floorModelUrl from "../../assets/models/glb/floorFull.glb?url";
+
+// 전역 변수
+const ROOM_SIZE = 10;
 
 export class Room {
   constructor(scene) {
@@ -8,84 +12,54 @@ export class Room {
   }
 
   createLayout() {
-    // 1. 바닥
-    const floor = MeshBuilder.CreateBox(
-      "floor",
-      { width: 10, height: 0.2, depth: 10 },
-      this.scene,
-    );
-    floor.position.y = -0.1;
+    // 바닥
+    this.loadFloor(new Vector3(0, 0, 0));
 
-    const floorMat = new StandardMaterial("floorMat", this.scene);
-    floorMat.diffuseColor = new Color3(0.5, 0.5, 0.5); // 회색 바닥
-    floor.material = floorMat;
-    floor.receiveShadows = true;
-
-    // 2. 벽 (예시로 뒤쪽 벽 하나만)
-    const backWall = MeshBuilder.CreateBox(
-      "backWall",
-      { width: 10, height: 4, depth: 0.2 },
-      this.scene,
-    );
-    backWall.position.z = 5;
-    backWall.position.y = 2;
-
-    const wallMat = new StandardMaterial("wallMat", this.scene);
-    wallMat.diffuseColor = new Color3(0.9, 0.9, 0.9); // 연한 흰색 벽
-    backWall.material = wallMat;
-
-    // 3. 천장
-    const ceiling = MeshBuilder.CreateBox(
-      "ceiling",
-      { width: 10, height: 0.2, depth: 10 },
-      this.scene,
-    );
-    ceiling.position.y = 4;
-    ceiling.material = wallMat;
-    ceiling.receiveShadows = true;
-
-    // 왼쪽 벽
-    const leftWall = MeshBuilder.CreateBox(
-      "leftWall",
-      { width: 0.2, height: 4, depth: 10 },
-      this.scene,
-    );
-    leftWall.position.x = -5;
-    leftWall.position.y = 2;
-    leftWall.material = wallMat;
-    leftWall.receiveShadows = true;
-    leftWall.checkCollisions = true;
-
-    // 오른쪽 벽
-    const rightWall = MeshBuilder.CreateBox(
-      "rightWall",
-      { width: 0.2, height: 4, depth: 10 },
-      this.scene,
-    );
-    rightWall.position.x = 5;
-    rightWall.position.y = 2;
-    rightWall.material = wallMat;
-    rightWall.receiveShadows = true;
-    rightWall.checkCollisions = true;
+    // 뒤쪽 벽
+    this.loadWall(new Vector3(-ROOM_SIZE, 0, 0), new Vector3(0, 0, 0));
 
     // 앞쪽 벽
-    const frontWall = MeshBuilder.CreateBox(
-      "frontWall",
-      { width: 10, height: 4, depth: 0.2 },
-      this.scene,
+    this.loadWall(
+      new Vector3(-ROOM_SIZE, 0, ROOM_SIZE),
+      new Vector3(0, Math.PI / 2, 0),
     );
-    frontWall.position.z = -5;
-    frontWall.position.y = 2;
-    frontWall.material = wallMat;
-    frontWall.receiveShadows = true;
-    frontWall.checkCollisions = true;
 
-    // 충돌 설정
-    floor.checkCollisions = true;
-    backWall.checkCollisions = true;
-    ceiling.checkCollisions = true;
-    leftWall.checkCollisions = true;
-    rightWall.checkCollisions = true;
-    frontWall.checkCollisions = true;
+    // 오른쪽 벽
+    this.loadWall(new Vector3(0, 0, 0), new Vector3(0, -Math.PI / 2, 0));
+    // 뒤쪽 벽
+    this.loadWall(new Vector3(0, 0, ROOM_SIZE), new Vector3(0, Math.PI, 0));
+  }
+
+  async loadFloor(position) {
+    const container = await LoadAssetContainerAsync(floorModelUrl, this.scene);
+    container.addAllToScene();
+
+    const root = container.meshes[0];
+    root.position = position;
+
+    // 방 크기에 맞춰 스케일 조정이 필요할 수 있음
+    root.scaling = new Vector3(ROOM_SIZE, 1, ROOM_SIZE);
+
+    container.meshes.forEach((mesh) => {
+      mesh.checkCollisions = false; // 바닥은 충돌 처리 안함
+      mesh.receiveShadows = true; // 그림자 받기
+    });
+  }
+
+  async loadWall(position, rotation) {
+    const container = await LoadAssetContainerAsync(wallModelUrl, this.scene);
+    container.addAllToScene();
+
+    const root = container.meshes[0];
+    root.position = position;
+    root.rotation = rotation;
+
+    // 방 크기에 맞춰 스케일 조정이 필요할 수 있음
+    root.scaling = new Vector3(10, 3, 1);
+
+    container.meshes.forEach((mesh) => {
+      mesh.checkCollisions = false;
+      mesh.receiveShadows = true;
+    });
   }
 }
