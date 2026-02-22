@@ -1,0 +1,151 @@
+// 색상 변수
+$colors: (
+  // Primary 색상
+  primary: #646cff,
+  primary-hover: #535bf2,
+  primary-light: #8188ff,
+  primary-dark: #4c54d9,
+
+  // Secondary 색상
+  secondary: #747bff,
+  secondary-hover: #6369ff,
+  secondary-light: #9095ff,
+  secondary-dark: #5d63cc,
+
+  // Background 색상
+  background: #242424,
+  background-light: #ffffff,
+  background-dark: #1a1a1a,
+  background-gray: #f5f5f5,
+  background-gray-dark: #2a2a2a,
+
+  // Text 색상
+  text: rgba(255, 255, 255, 0.87),
+  text-dark: #213547,
+  text-light: rgba(255, 255, 255, 0.6),
+  text-muted: #6c757d,
+  text-white: #ffffff,
+  text-black: #000000,
+
+  // Border 색상
+  border: #1a1a1a,
+  border-light: #f9f9f9,
+  border-gray: #dee2e6,
+  border-dark: #343a40,
+
+  // 상태 색상
+  success: #28a745,
+  success-light: #d4edda,
+  success-dark: #1e7e34,
+
+  error: #dc3545,
+  error-light: #f8d7da,
+  error-dark: #c82333,
+
+  warning: #ffc107,
+  warning-light: #fff3cd,
+  warning-dark: #e0a800,
+
+  info: #17a2b8,
+  info-light: #d1ecf1,
+  info-dark: #117a8b,
+
+  // 기타 색상
+  white: #ffffff,
+  black: #000000,
+  gray-100: #f8f9fa,
+  gray-200: #e9ecef,
+  gray-300: #dee2e6,
+  gray-400: #ced4da,
+  gray-500: #adb5bd,
+  gray-600: #6c757d,
+  gray-700: #495057,
+  gray-800: #343a40,
+  gray-900: #212529
+);
+
+// 함수: 색상 가져오기
+@function color($key) {
+  @return map-get($colors, $key);
+}
+
+// 사이즈 변수
+$sizes: (
+  xs: 0.5rem,
+  sm: 0.75rem,
+  md: 1rem,
+  lg: 1.25rem,
+  xl: 1.5rem,
+  xxl: 2rem,
+  xxxl: 3rem,
+);
+
+// 함수: 사이즈 가져오기
+@function size($key) {
+  @return map-get($sizes, $key);
+}
+
+// 폰트 사이즈 변수
+$font-sizes: (
+  xs: 0.75rem,
+  // 12px
+  sm: 0.875rem,
+  // 14px
+  base: 1rem,
+  // 16px
+  lg: 1.125rem,
+  // 18px
+  xl: 1.25rem,
+  // 20px
+  "2xl": 1.5rem,
+  // 24px
+  "3xl": 1.875rem,
+  // 30px
+  "4xl": 2.25rem,
+  // 36px
+  "5xl": 3rem,
+  // 48px
+  "6xl": 3.75rem,
+  // 60px
+);
+
+// 함수: 폰트 사이즈 가져오기
+@function font-size($key) {
+  @return map-get($font-sizes, $key);
+}
+
+// 간격 변수
+$spacings: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.25rem,
+  6: 1.5rem,
+  8: 2rem,
+  10: 2.5rem,
+  12: 3rem,
+  16: 4rem,
+  20: 5rem,
+);
+
+// 함수: 간격 가져오기
+@function spacing($key) {
+  @return map-get($spacings, $key);
+}
+
+// 브레이크포인트 (반응형 사이즈)
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+);
+
+// 함수: 브레이크포인트 가져오기
+@function breakpoint($key) {
+  @return map-get($breakpoints, $key);
+}
