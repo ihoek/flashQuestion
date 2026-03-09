@@ -13,6 +13,7 @@ import "@babylonjs/loaders/glTF";
 
 // entities
 import { Room } from "../entities/Room";
+import { FurnitureManager } from "../objects/furniture";
 
 const CAMERA_TARGET = new Vector3(-2, 1.8, 2);
 const CAMERA_ALPHA = -0.7358774;
@@ -85,6 +86,10 @@ export class SceneController {
 
     // 6. 방 생성
     this.room = new Room(this.scene);
+    this.furnitureManager = new FurnitureManager(this.scene);
+    this.furnitureManager.placeAll().catch((error) => {
+      console.error("Failed to place furniture:", error);
+    });
 
     // 7. 모든 메쉬 그림자 적용
     this.scene.meshes.forEach((mesh) => {
