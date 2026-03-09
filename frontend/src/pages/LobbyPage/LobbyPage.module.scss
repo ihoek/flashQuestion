@@ -10,4 +10,13 @@
     height: 100%;
     outline: none;
   }
+
+  .calnderSection {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 150px;
+    height: 200px;
+    pointer-events: none;
+  }
 }

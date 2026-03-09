@@ -4,6 +4,9 @@ import { useEffect, useRef } from "react";
 // game
 import { SceneController } from "../../game/core/SceneController";
 
+// features
+import CalnderSection from "../../features/CalnderSection/CalnderSection";
+
 const LobbyPage = () => {
   // 변수 선언
   const canvasRef = useRef(null);
@@ -36,6 +39,10 @@ const LobbyPage = () => {
       >
         <h1>My 3D Room</h1>
         <p>WASD로 이동, 마우스로 회전</p>
+      </div>
+
+      <div className={styles.calnderSection}>
+        <CalnderSection />
       </div>
     </div>
   );
