@@ -6,12 +6,13 @@ import { SceneController } from "../../game/core/SceneController";
 
 // features
 import CalnderSection from "../../features/CalnderSection/CalnderSection";
+import MiniPhone from "../../components/MiniPhone/MiniPhone";
 
 const LobbyPage = () => {
   // 변수 선언
   const canvasRef = useRef(null);
 
-  // ============== useEffect ==============
+  // useEffect ============================
   useEffect(() => {
     if (canvasRef.current) {
       // 엔진 초기화
@@ -41,8 +42,14 @@ const LobbyPage = () => {
         <p>WASD로 이동, 마우스로 회전</p>
       </div>
 
+      {/* 달력 영역 */}
       <div className={styles.calnderSection}>
         <CalnderSection />
+      </div>
+
+      {/* 핸드폰 영역 */}
+      <div className={styles.phoneSection}>
+        <MiniPhone />
       </div>
     </div>
   );

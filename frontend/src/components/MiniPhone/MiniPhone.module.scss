@@ -1,0 +1,94 @@
+.container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  perspective: 1000px;
+}
+
+.phoneBody {
+  width: 90px;
+  height: 150px;
+  background-color: #ffffff;
+  border-radius: 18px;
+  border: 3px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 6px;
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.1),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.05); // 하단 입체감
+  transform: rotateZ(-2deg); // 살짝 기울여서 캐주얼한 느낌 강조
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: rotateZ(0deg) translateY(-5px);
+  }
+}
+
+.topNotch {
+  width: 25px;
+  height: 4px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  margin: 0 auto 12px;
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.menuItem {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .iconBox {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s;
+
+    &:active {
+      transform: scale(0.9);
+    }
+  }
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #f5f5f5;
+}
+
+.pointBadge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fffdf0;
+  border: 1.5px solid #ffe082;
+  border-radius: 20px;
+  padding: 2px 8px;
+
+  .cpLabel {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffa000;
+  }
+
+  .cpValue {
+    font-size: 12px;
+    font-weight: 800;
+    color: #5d4037;
+  }
+}

@@ -8,6 +8,10 @@ const CalnderSection = () => {
     <div className={styles.container}>
       <div className={styles.layout}>
         <Clcok />
+
+        <div className={styles.dDaySection}>
+          <div className={styles.dDayTitle}>D-DAY</div>
+        </div>
       </div>
     </div>
   );

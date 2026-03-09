@@ -18,6 +18,7 @@ const CAMERA_TARGET = new Vector3(-2, 1.8, 2);
 const CAMERA_ALPHA = -0.7358774;
 const CAMERA_BETA = 1.3207498;
 const CAMERA_RADIUS = 10;
+const CAMERA_POSITION = new Vector3(2.1608635, 9.346957, -3.1814455);
 
 export class SceneController {
   constructor(canvas) {
@@ -42,6 +43,8 @@ export class SceneController {
       CAMERA_TARGET,
       this.scene,
     );
+    // ArcRotateCamera는 alpha/beta/radius를 쓰지만, 초기 월드 좌표를 직접 줄 때는 setPosition을 사용합니다.
+    camera.setPosition(CAMERA_POSITION);
     camera.attachControl(this.canvas, true);
     camera.lowerRadiusLimit = 10;
     camera.upperRadiusLimit = 18;
