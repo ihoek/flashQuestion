@@ -5,15 +5,19 @@ import {
   Color3,
   HemisphericLight,
   DirectionalLight,
-  FreeCamera,
+  ArcRotateCamera,
   ShadowGenerator,
   DefaultRenderingPipeline,
-  MeshBuilder,
 } from "@babylonjs/core";
 import "@babylonjs/loaders/glTF";
 
 // entities
 import { Room } from "../entities/Room";
+
+const CAMERA_TARGET = new Vector3(-2, 1.8, 2);
+const CAMERA_ALPHA = -0.7358774;
+const CAMERA_BETA = 1.3207498;
+const CAMERA_RADIUS = 10;
 
 export class SceneController {
   constructor(canvas) {
@@ -29,83 +33,62 @@ export class SceneController {
   }
 
   initScene() {
-    // 1. 카메라 설정
-    // 0, 1.6, -5 위치에서 시작 (1.6은 사람의 눈높이와 유사)
-    const camera = new FreeCamera(
+    // 1. ArcRotateCamera: 쿼터뷰(아이소메트릭 느낌)로 고정
+    const camera = new ArcRotateCamera(
       "mainCamera",
-      new Vector3(0, 1.6, -5),
+      CAMERA_ALPHA,
+      CAMERA_BETA,
+      CAMERA_RADIUS,
+      CAMERA_TARGET,
       this.scene,
     );
     camera.attachControl(this.canvas, true);
+    camera.lowerRadiusLimit = 10;
+    camera.upperRadiusLimit = 18;
 
-    // --- [WASD 키 맵핑 추가] ---
-    camera.keysUp = [87]; // W (코드 87)
-    camera.keysDown = [83]; // S (코드 83)
-    camera.keysLeft = [65]; // A (코드 65)
-    camera.keysRight = [68]; // D (코드 68)
-    // -------------------------
+    // 회전 허용, 지나치게 위/아래로 꺾이지 않게만 제한
+    camera.lowerBetaLimit = 0.35;
+    camera.upperBetaLimit = 1.45;
+    camera.panningSensibility = 0;
+    camera.wheelPrecision = 40;
+    this.initRightClickCameraLogger(camera);
 
-    // 이동 속도 조절
-    camera.speed = 0.2;
-    // 마우스 회전 감도 조절
-    camera.angularSensibility = 2000;
-    // 좌클릭(button 0)만 회전에 사용, 우클릭은 회전에서 제외
-    camera.inputs.attached.mouse.buttons = [0];
-
-    // [추가] 카메라 충돌 및 물리 설정
-    camera.checkCollisions = true;
-    camera.applyGravity = true;
-    camera.ellipsoid = new Vector3(0.5, 1, 0.5);
-
-    // 우클릭 드래그로 카메라 상하 이동
-    this.initRightClickVerticalMove(camera);
-
-    // 2. 환경광 (어두운 곳이 없게 전체적으로 비춤)
+    // 2. 환경광 (intensity를 0.4 정도로 낮추어 차분하게)
     const light = new HemisphericLight(
       "light",
       new Vector3(0, 1, 0),
       this.scene,
     );
-    light.intensity = 0.7;
+    light.intensity = 0.4;
+    light.groundColor = new Color3(0.2, 0.1, 0.1); // 바닥 반사광을 어둡게 설정
 
-    // 3. 방향광 (그림자를 만들어 입체감을 줌)
+    // 3. 방향광 (이미지의 부드러운 그림자를 위해 각도 조절)
     const dirLight = new DirectionalLight(
       "dirLight",
-      new Vector3(-1, -1, -1),
+      new Vector3(-0.5, -1, -0.5),
       this.scene,
     );
-    dirLight.position = new Vector3(10, 20, 10);
-    dirLight.intensity = 1.5;
+    dirLight.position = new Vector3(10, 15, 10);
+    dirLight.intensity = 0.6; // 너무 밝지 않게 조절
 
-    // 4. 씬 배경색
-    // this.scene.clearColor = Color3.FromHexString("#FFFFFF").toColor4();
+    // 4. 배경색 (이미지의 차분한 웜그레이 톤)
+    this.scene.clearColor = Color3.FromHexString("#D6CEC3").toColor4();
 
-    // [추가] 조명이 너무 노랗거나 파랗다면 이미지 처리 장치에서 밝기 노출을 조정합니다.
-    // this.scene.imageProcessingConfiguration.exposure = 1.0;
-
-    // 5. 그림자 생성
+    // 5. 그림자 설정
     const shadowGenerator = new ShadowGenerator(1024, dirLight);
     shadowGenerator.useBlurExponentialShadowMap = true;
-    shadowGenerator.blurKernel = 32;
+    shadowGenerator.blurKernel = 64; // 더 부드러운 그림자
+    shadowGenerator.setDarkness(0.3); // 그림자가 너무 검지 않게
 
-    // 6. 보이지 않는 바닥 (카메라 충돌/중력용)
-    const invisibleGround = MeshBuilder.CreateGround(
-      "invisibleGround",
-      { width: 100, height: 100 },
-      this.scene,
-    );
-    invisibleGround.isVisible = false;
-    invisibleGround.checkCollisions = true;
-
-    // 7. 방 생성
+    // 6. 방 생성
     this.room = new Room(this.scene);
 
-    // 7. Room 메쉬들을 그림자 caster로 등록
-    this.room.scene.meshes.forEach((mesh) => {
+    // 7. 모든 메쉬 그림자 적용
+    this.scene.meshes.forEach((mesh) => {
       shadowGenerator.addShadowCaster(mesh);
     });
 
-    // 8. 후처리(Post-process) 설정
+    // 8. 후처리 (중요: Bloom 수치를 대폭 낮춤)
     this.initPostProcess(camera);
 
     // 5. 윈도우 리사이즈 대응
@@ -118,42 +101,36 @@ export class SceneController {
   initPostProcess(camera) {
     const pipeline = new DefaultRenderingPipeline(
       "defaultPipeline",
-      true, // HDR 사용
+      true,
       this.scene,
       [camera],
     );
+    pipeline.samples = 4;
+    pipeline.bloomEnabled = true;
+    pipeline.bloomThreshold = 0.9; // 0.72에서 높여서 밝은 곳만 번지게 함
+    pipeline.bloomWeight = 0.2; // 번짐 강도 약화
 
-    pipeline.samples = 4; // 안티앨리어싱 (계단 현상 방지)
-    pipeline.bloomEnabled = true; // 빛 번짐 효과
-    pipeline.bloomThreshold = 0.8;
-    pipeline.bloomWeight = 0.3;
     pipeline.imageProcessingEnabled = true;
-    pipeline.imageProcessing.contrast = 1.2; // 색감 대비 향상
+    pipeline.imageProcessing.exposure = 1.0;
+    pipeline.imageProcessing.contrast = 1.1; // 대비를 주어 색감을 뚜렷하게
   }
 
-  initRightClickVerticalMove(camera) {
-    let isRightDown = false;
-    let lastY = 0;
-    const sensitivity = 0.01;
-
+  initRightClickCameraLogger(camera) {
     this.canvas.addEventListener("pointerdown", (e) => {
-      if (e.button === 2) {
-        isRightDown = true;
-        lastY = e.clientY;
-      }
-    });
+      if (e.button !== 2) return;
 
-    this.canvas.addEventListener("pointermove", (e) => {
-      if (!isRightDown) return;
-      const deltaY = e.clientY - lastY;
-      camera.position.y -= deltaY * sensitivity;
-      lastY = e.clientY;
-    });
-
-    this.canvas.addEventListener("pointerup", (e) => {
-      if (e.button === 2) {
-        isRightDown = false;
-      }
+      e.preventDefault();
+      const target = camera.getTarget();
+      console.log("camera position:", {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+      });
+      console.log("camera target:", {
+        x: target.x,
+        y: target.y,
+        z: target.z,
+      });
     });
 
     this.canvas.addEventListener("contextmenu", (e) => {
